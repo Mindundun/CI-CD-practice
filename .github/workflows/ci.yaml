@@ -1,17 +1,35 @@
-name: CI
+name: CI  # 워크플로우 이름, GitHub Actions에서 표시됨
 
 on:
-  push:
-    branches: [main]
+  push:               # main 브랜치에 push될 때 워크플로우가 실행됨
+    branches: [main]  # 트리거될 브랜치 지정
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+  test:               # job 이름, 여기서는 테스트용 job
+    runs-on: ubuntu-latest  # GitHub에서 제공하는 최신 Ubuntu VM에서 실행
+    steps:            # job 안에서 실행될 단계들
+      - uses: actions/checkout@v4   # 리포지토리를 체크아웃해서 VM 안에 코드 가져오기
+      - uses: actions/setup-node@v4 # Node.js 설치 및 환경 설정
         with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm test
+          node-version: '20'  # 설치할 Node 버전 지정
+          cache: 'npm'        # npm 캐시 사용, 다음 실행 시 패키지 설치 속도 향상
+      - run: npm ci           # CI 환경에 맞게 package-lock.json 기준으로 패키지 설치
+      - run: npm test         # 프로젝트 테스트 실행, package.json의 "test" 스크립트 실행
+    
+    build-and-push:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Login to Docker GitHub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+        - name: Build and push
+          uses: docker/build-push-action@v5
+          with:
+            context: .
+            push: true
+            tags: parkminkyung/hello-server-for-cicd-test:latest
