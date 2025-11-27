@@ -3,6 +3,8 @@ name: CI  # 워크플로우 이름, GitHub Actions에서 표시됨
 on:
   push:               # main 브랜치에 push될 때 워크플로우가 실행됨
     branches: [main]  # 트리거될 브랜치 지정
+    path-ignore:
+      - 'k8s/**'
 
 jobs:
   test:                             # job 이름, 여기서는 테스트용 job
@@ -37,13 +39,20 @@ jobs:
           tags: |
               parkminkyung/hello-server-for-cicd-test:latest
               parkminkyung/hello-server-for-cicd-test:${{ github.sha }}
-
+  
+  # github 저장소에 이미지 태그 업데이트
   deploy:
     needs: build-and-push
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Kubernetes
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - name: Update image tag and push
         run: |
-            sed -i "s|IMAGE_TAG|${{ github.sha }}|g" k8s/deployment.yaml
-            kubectl apply -f k8s/deployment.yaml
+          sed -i "s|image: parkminkyung/hello-server-for-cicd-test:.*|image: parkminkyung/hello-server-for-cicd-test:${{ github.sha }}|g" k8s/deployment.yaml
+          git config user.name "Mindundun"
+          git config user.email "pmk10077@gmail.com"
+          git add k8s/deployment.yaml
+          git commit -m "[skip ci] Update image tag to ${{ github.sha }}"
+          git push 
