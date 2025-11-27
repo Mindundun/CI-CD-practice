@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: parkminkyung/hello-server-for-cicd-test:IMAGE_TAG
+        image: parkminkyung/hello-server-for-cicd-test:345296010e20a3a83be3d01f5287c8d72d69f0fe
         ports:
         - containerPort: 3000
 ---
